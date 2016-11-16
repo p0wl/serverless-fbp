@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const parseFbp = require('./parseFbp');
+const fbp = require('fbp');
+const shared = require('./shared');
 
 function assertNoExistingSnsHandler(events) { // eslint-disable-line
   return true;
@@ -16,9 +17,10 @@ class DeployLogger {
   }
 
   beforeDeployInit() {
-    const fbpOptions = this.serverless.service.custom.fbp;
-    const fbpGraph = parseFbp.parse(fbpOptions);
-    const inputs = parseFbp.inputs(fbpGraph);
+    const fbpFileName = this.serverless.service.custom.fbp;
+    const fileContent = fs.readFileSync(path.resolve(fbpFileName), 'utf8');
+    const fbpGraph = fbp.parse(fileContent);
+    const inputs = shared.inputs(fbpGraph);
 
     inputs.forEach((input) => {
       const funcDefinition = this.serverless.service.functions[input];
@@ -28,7 +30,7 @@ class DeployLogger {
 
       assertNoExistingSnsHandler(funcDefinition.events);
 
-      funcDefinition.events.push({ sns: `fbp-${input}` });
+      funcDefinition.events.push({ sns: shared.snsTopicForComponent(input) });
     });
 
     const fbpGraphFile = path.join(this.serverless.config.servicePath, './.fbp.json');

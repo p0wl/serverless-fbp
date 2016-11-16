@@ -2,15 +2,21 @@
 
 const AWS = require('aws-sdk');
 const BbPromise = require('bluebird');
-const fbpGraphInstance = require('./instance.js');
+const shared = require('./shared');
 
-const parseAccountId = /arn:aws:lambda:(.+?):(.+?):/;
+const fbpGraph = require('.fbp.json'); // eslint-disable-line import/no-unresolved
+
+const fromSnsSubscription = handler => (event, context, callback) => {
+  try {
+    const message = event.Records[0].Sns.Message;
+    return handler(JSON.parse(message), context, callback);
+  } catch (e) {
+    console.log('Could not find sns message content in event: ', JSON.stringify(event)); // eslint-disable-line no-console
+  }
+};
 
 function snsArnFromLambdaArn(arn, topic) {
-  if (!arn) { // Invoked local
-    return `fbp-local-${topic}`;
-  }
-
+  const parseAccountId = /arn:aws:lambda:(.+?):(.+?):/;
   const region = parseAccountId.exec(arn)[1];
   const accountId = parseAccountId.exec(arn)[2];
 
@@ -20,6 +26,11 @@ function snsArnFromLambdaArn(arn, topic) {
 const publishToSnsTopics = (topics, context, callback) => (err, result) => {
   const sns = new AWS.SNS();
   const message = JSON.stringify(result);
+
+  if (!context.invokedFunctionArn) { // Invoked local
+    console.log(`Invoked local - would publish to ${topics.join(',')}, but stopping here.`); // eslint-disable-line no-console
+    return;
+  }
 
   BbPromise.each(topics, (topic) => {
     const params = {
@@ -35,26 +46,17 @@ const publishToSnsTopics = (topics, context, callback) => (err, result) => {
   }).then(() => callback(null, { message: 'Message successfully published to SNS topics' }));
 };
 
-const fromSnsSubscription = handler => (event, context, callback) => {
-  try {
-    const message = event.Records[0].Sns.Message;
-    handler(JSON.parse(message), context, callback);
-  } catch (e) {
-    console.log('Could not find sns message content in event: ', JSON.stringify(event)); // eslint-disable-line no-console
-  }
-};
-
-module.exports.register = (componentName, handler) => (event, context, callback) => {
-  const settings = fbpGraphInstance.settings(componentName);
+module.exports.register = (component, handler) => (event, context, callback) => {
+  const connections = shared.connectionsForComponent(fbpGraph, component);
 
   let enrichedHandler = handler;
-  if (settings.input.length > 0) {
+  if (connections.input.length > 0) {
     enrichedHandler = fromSnsSubscription(handler);
   }
 
   let enrichedCallback = callback;
-  if (settings.output.length > 0) {
-    const topics = settings.output.map(output => `fbp-${output}`);
+  if (connections.output.length > 0) {
+    const topics = connections.output.map(output => shared.snsTopicForComponent(output));
     enrichedCallback = publishToSnsTopics(topics, context, callback);
   }
 
