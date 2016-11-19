@@ -1,0 +1,45 @@
+{
+  "processes": {
+    "Ping1": {
+      "component": "ping"
+    },
+    "Hello1": {
+      "component": "hello"
+    },
+    "Logger1": {
+      "component": "logger"
+    }
+  },
+  "connections": [
+    {
+      "src": {
+        "process": "Ping1",
+        "port": "out"
+      },
+      "tgt": {
+        "process": "Hello1",
+        "port": "in"
+      }
+    },
+    {
+      "src": {
+        "process": "Ping1",
+        "port": "out"
+      },
+      "tgt": {
+        "process": "Logger1",
+        "port": "in"
+      }
+    },
+    {
+      "src": {
+        "process": "Hello1",
+        "port": "out"
+      },
+      "tgt": {
+        "process": "Logger1",
+        "port": "in"
+      }
+    }
+  ]
+}
