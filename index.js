@@ -7,7 +7,7 @@ function assertNoExistingSnsHandler(events) { // eslint-disable-line
   return true;
 }
 
-class DeployLogger {
+class ServerlessFbp {
   constructor(serverless) {
     this.serverless = serverless;
     this.hooks = {
@@ -43,4 +43,4 @@ class DeployLogger {
   }
 }
 
-module.exports = DeployLogger;
+module.exports = ServerlessFbp;
