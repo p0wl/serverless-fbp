@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const fbp = require('fbp');
-const shared = require('./shared');
+const shared = require('./src/shared');
 
 function assertNoExistingSnsHandler(input, events, topic) {
   if (events.some(event => event.sns === topic)) {
