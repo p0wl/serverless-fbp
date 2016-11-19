@@ -6,6 +6,7 @@ const shared = require('./shared');
 
 const fbpGraph = require('.fbp.json'); // eslint-disable-line import/no-unresolved
 
+// eslint-disable-next-line consistent-return
 const fromSnsSubscription = handler => (event, context, callback) => {
   try {
     const message = event.Records[0].Sns.Message;
