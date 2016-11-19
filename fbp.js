@@ -8,12 +8,13 @@ const fbpGraph = require('.fbp.json'); // eslint-disable-line import/no-unresolv
 
 // eslint-disable-next-line consistent-return
 const fromSnsSubscription = handler => (event, context, callback) => {
+  let message;
   try {
-    const message = event.Records[0].Sns.Message;
-    return handler(JSON.parse(message), context, callback);
+    message = event.Records[0].Sns.Message;
   } catch (e) {
     console.log('Could not find sns message content in event: ', JSON.stringify(event)); // eslint-disable-line no-console
   }
+  return handler(JSON.parse(message), context, callback);
 };
 
 function snsArnFromLambdaArn(arn, topic) {
