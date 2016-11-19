@@ -2,7 +2,7 @@
 
 const AWS = require('aws-sdk');
 const BbPromise = require('bluebird');
-const shared = require('./shared');
+const shared = require('./src/shared');
 
 const fbpGraph = require('.fbp.json'); // eslint-disable-line import/no-unresolved
 
