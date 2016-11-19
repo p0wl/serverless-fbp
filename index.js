@@ -3,8 +3,10 @@ const path = require('path');
 const fbp = require('fbp');
 const shared = require('./shared');
 
-function assertNoExistingSnsHandler(events) { // eslint-disable-line
-  return true;
+function assertNoExistingSnsHandler(input, events, topic) {
+  if (events.some(event => event.sns === topic)) {
+    throw new Error(`Cannot add ${topic} sns-topic, because it is already declared in your serverless service definition. Please remove it from serverless.yml. Serverless-fbp will set it up automatically\n\n\tService: ${input}\n\tEvent: ${topic}`);
+  }
 }
 
 class ServerlessFbp {
@@ -28,9 +30,10 @@ class ServerlessFbp {
         funcDefinition.events = [];
       }
 
-      assertNoExistingSnsHandler(funcDefinition.events);
+      const snsTopic = shared.snsTopicForComponent(input);
+      assertNoExistingSnsHandler(input, funcDefinition.events, snsTopic);
 
-      funcDefinition.events.push({ sns: shared.snsTopicForComponent(input) });
+      funcDefinition.events.push({ sns: snsTopic });
     });
 
     const fbpGraphFile = path.join(this.serverless.config.servicePath, './.fbp.json');
