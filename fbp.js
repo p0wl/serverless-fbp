@@ -13,6 +13,7 @@ const fromSnsSubscription = handler => (event, context, callback) => {
     message = event.Records[0].Sns.Message;
   } catch (e) {
     console.log('Could not find sns message content in event: ', JSON.stringify(event)); // eslint-disable-line no-console
+    return null;
   }
   return handler(JSON.parse(message), context, callback);
 };
